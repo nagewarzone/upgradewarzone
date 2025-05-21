@@ -10,13 +10,14 @@ const fetch = require('node-fetch'); // ใช้ส่งข้อความ 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
+const db = admin.firestore();  // ย้ายมาไว้ตรงนี้ก่อนใช้งาน
+
 db.collection('users').limit(1).get()
   .then(() => console.log('Firestore เชื่อมต่อได้!'))
   .catch(err => console.error('Firestore connect error:', err));
 
-const db = admin.firestore();
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;  // fallback port สำหรับ local
 
 app.use(cors());
 // ใช้ express built-in json parser แทน body-parser
@@ -207,78 +208,66 @@ app.post('/proxy', async (req, res) => {
         topgm -= 1;
         logResult = `แตก`;
         resultMessage = `อัพเกรดล้มเหลว ไอเท็มสูญหาย (TOPGM หาย)`;
-        await sendDiscord(`\u00A0\u00A0\u00A0\u00A0${name || username}\u00A0\u00A0 💥\u00A0\u00A0 ได้อัพเกรดล้มเหลว! \u00A0\u00A0ไอเท็ม \u00A0\u00A0ปลอกTOPGM\u00A0\u00A0 ถูกทำลาย`);
+        await sendDiscord(`\u00A0\u00A0\u00A0\u00A0${name || username}\u00A0\u00A0 💥\u00A0\u00A0 ได้อัพเกรด \u00A0\u00A0ปลอกTOPGM แตกหาย!!\u00A0 ขอให้โชคดีครั้งหน้า`);
       }
-
-      if (topgm < 0) topgm = 0;
 
       await userRef.update({
         token: currentToken,
-        warzone: warzone,
-        topgm: topgm
+        topgm: topgm,
+        warzone: warzone
       });
 
       await db.collection('logs').add({
-        Date: admin.firestore.FieldValue.serverTimestamp(),
-        Username: username,
-        Name: name || '',
-        Item: itemName,
-        Result: logResult
+        username,
+        name: name || username,
+        action: 'upgrade',
+        item: 'topgm',
+        result: logResult,
+        timestamp: new Date()
       });
 
-      return res.json({ success: true, result: logResult, resultMessage });
+      return res.json({ success: true, result, message: resultMessage });
     }
 
-    return res.json({ success: false, message: 'Unknown action' });
-  } catch (err) {
-    console.error(err);
-    return res.json({ success: false, message: 'Server Error' });
+    return res.json({ success: false, message: 'ไม่รองรับ action นี้' });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในเซิร์ฟเวอร์' });
   }
 });
 
-// API ดึงอัตราอัปเกรดทั้งหมด (public)
-app.get('/getUpgradeRates', async (req, res) => {
-  try {
-    const snapshot = await db.collection('upgraderates').get();
-    const rates = {};
-    snapshot.forEach(doc => {
-      rates[doc.id] = doc.data();
-    });
-    res.json({ success: true, rates });
-  } catch (err) {
-    console.error(err);
-    res.json({ success: false, message: 'Server Error' });
-  }
-});
 
-// API ดึง logs ล่าสุด 100 รายการ (public หรือ admin แล้วแต่ต้องการ)
+// --- API สำหรับ Admin ---
+// ดู Log อัพเกรด
 app.get('/logs', adminAuth, async (req, res) => {
   try {
-    const snapshot = await db.collection('logs')
-      .orderBy('Date', 'desc')
-      .limit(100)
-      .get();
+    const logsRef = db.collection('logs').orderBy('timestamp', 'desc').limit(100);
+    const snapshot = await logsRef.get();
 
     const logs = [];
-    snapshot.forEach(doc => logs.push(doc.data()));
+    snapshot.forEach(doc => {
+      logs.push({ id: doc.id, ...doc.data() });
+    });
+
     res.json({ success: true, logs });
-  } catch (err) {
-    console.error(err);
-    res.json({ success: false, message: 'Server Error' });
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: 'Server error' });
   }
 });
 
-// API ค้นหาผู้ใช้ (admin only)
+// ค้นหาผู้ใช้ (admin only)
 app.get('/searchUser', adminAuth, async (req, res) => {
   const q = req.query.q || '';
   if (q.length < 2) return res.json({ success: false, message: 'กรุณากรอกคำค้นหาอย่างน้อย 2 ตัวอักษร' });
 
   try {
     const usersRef = db.collection('users');
-    // Firestore ไม่มี query "contains" แบบตรงๆ จึงใช้ startAt/endAt กับ field username หรือชื่อเล่นที่เก็บไว้
-    // สมมติ username คือ doc.id และมี field displayName ใน document (ต้องปรับ data ให้มี)
+
+    // ใช้ documentId() แทน username field
     const snapshot = await usersRef
-      .orderBy('username')
+      .orderBy(admin.firestore.FieldPath.documentId())
       .startAt(q)
       .endAt(q + '\uf8ff')
       .limit(20)
@@ -296,6 +285,8 @@ app.get('/searchUser', adminAuth, async (req, res) => {
   }
 });
 
+
+// เริ่มฟังพอร์ต
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });
