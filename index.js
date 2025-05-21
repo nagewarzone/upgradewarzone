@@ -16,7 +16,7 @@ db.collection('users').limit(1).get()
 
 const db = admin.firestore();
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 app.use(cors());
 // ใช้ express built-in json parser แทน body-parser
