@@ -1,8 +1,7 @@
 const express = require('express');   
 const cors = require('cors');
 const admin = require('firebase-admin');
-const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON; // string JSON
-const serviceAccount = JSON.parse(serviceAccountJson);
+const serviceAccount = require('./serviceAccountKey.json');
 const path = require('path');
 const fetch = require('node-fetch'); // ใช้ส่งข้อความ Discord webhook
 console.log('SERVICE ACCOUNT JSON:', serviceAccountJson);
