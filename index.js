@@ -1,16 +1,16 @@
 const express = require('express');   
 const cors = require('cors');
 const admin = require('firebase-admin');
-const serviceAccount = require('./firebase-adminsdk.json'); // ใช้ได้เลย ถ้า server.js อยู่ใน /upgradewarzone
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 const path = require('path');
 const fetch = require('node-fetch'); // ใช้ส่งข้อความ Discord webhook
 
 
 // เริ่มต้น Firebase Admin
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount),
 });
-const db = admin.firestore();  // ย้ายมาไว้ตรงนี้ก่อนใช้งาน
+const db = admin.firestore();
 
 db.collection('users').limit(1).get()
   .then(() => console.log('Firestore เชื่อมต่อได้!'))
