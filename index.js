@@ -4,13 +4,11 @@ const admin = require('firebase-admin');
 const serviceAccount = require('./serviceAccountKey.json');
 const path = require('path');
 const fetch = require('node-fetch'); // ใช้ส่งข้อความ Discord webhook
-console.log('SERVICE ACCOUNT JSON:', serviceAccountJson);
-
-
-// เริ่มต้น Firebase Admin
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount),
 });
+
+console.log('Firebase admin initialized');
 const db = admin.firestore();
 
 db.collection('users').limit(1).get()
