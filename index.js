@@ -1,7 +1,7 @@
 const express = require('express');   
 const cors = require('cors');
 const admin = require('firebase-admin');
-const serviceAccount = require('./firebase-adminsdk.json');
+const serviceAccount = require('./firebase-adminsdk.json'); // ใช้ได้เลย ถ้า server.js อยู่ใน /upgradewarzone
 const path = require('path');
 const fetch = require('node-fetch'); // ใช้ส่งข้อความ Discord webhook
 
