@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
 const serviceAccount = require('./firebase-adminsdk.json');
+const path = require('path');
 const fetch = require('node-fetch'); // ใช้ส่งข้อความ Discord webhook
 
 
