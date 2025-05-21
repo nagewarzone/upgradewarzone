@@ -1,13 +1,9 @@
 const express = require('express');   
 const cors = require('cors');
 const admin = require('firebase-admin');
-const path = require('path');
+const serviceAccount = require('./firebase-adminsdk.json');
 const fetch = require('node-fetch'); // ใช้ส่งข้อความ Discord webhook
 
-// โหลดไฟล์ Service Account ของ Firebase Admin SDK จาก env ที่เก็บ JSON string ไว้
-const serviceAccount = JSON.parse(
-  process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON.replace(/\\n/g, '\n')
-);
 
 // เริ่มต้น Firebase Admin
 admin.initializeApp({
