@@ -30,7 +30,7 @@ app.use(express.static(path.join(__dirname, 'public')));
  * @param {object|null} embed (optional) ถ้ามี embed object จะส่งแทนข้อความธรรมดา
  */
 async function sendDiscord(message, embed = null) {
-  const webhookURL = 'https://discord.com/api/webhooks/1374624597881786439/1SmgQBuaM582kC3E6f0_dDmLKUu-nFxg0XLq2pjC4F7Dd6P3Q6Mj1qATz7jMhYWi-Drt';
+  const webhookURL = process.env.DISCORD_WEBHOOK_URL;
   try {
     const body = embed ? { embeds: [embed] } : { content: message };
     await fetch(webhookURL, {
@@ -44,7 +44,9 @@ async function sendDiscord(message, embed = null) {
 }
 
 // กำหนดรหัสผ่าน admin ไว้ที่นี่ (เปลี่ยนเป็นรหัสที่ปลอดภัยจริง)
-const ADMIN_PASSWORD = '7890';
+// ดึงค่า username และ password จาก environment variables หรือใช้ค่า default
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 // Middleware สำหรับตรวจสอบ admin ผ่าน header 'x-admin-password'
 function adminAuth(req, res, next) {
@@ -55,13 +57,7 @@ function adminAuth(req, res, next) {
   next();
 }
 
-// **เพิ่มข้อมูล username + password ของ admin สำหรับ login แบบ POST**
-const ADMIN_CREDENTIALS = {
-  username: 'admin', // เปลี่ยนชื่อผู้ใช้ admin ตามต้องการ
-  password: ADMIN_PASSWORD // ใช้รหัสผ่านเดียวกับ ADMIN_PASSWORD หรือเปลี่ยนได้
-};
-
-// เพิ่ม API สำหรับ login admin โดยเช็ค username + password จาก body
+// API สำหรับ admin login โดยเช็ค username และ password จาก body กับ env vars
 app.post('/admin/login', (req, res) => {
   const { username, password } = req.body;
 
@@ -70,15 +66,16 @@ app.post('/admin/login', (req, res) => {
   }
 
   if (
-    username === ADMIN_CREDENTIALS.username &&
-    password === ADMIN_CREDENTIALS.password
+    username === ADMIN_USERNAME &&
+    password === ADMIN_PASSWORD
   ) {
-    // อาจจะส่ง token หรือ session ไว้ใช้ในอนาคต
+    // ถ้าต้องการให้ระบบปลอดภัยขึ้น อาจสร้าง token จริง ๆ หรือ session ได้
     return res.json({ success: true, message: 'เข้าสู่ระบบสำเร็จ', token: 'dummy-admin-token' });
   } else {
-    return res.status(401).json({ success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง หรือไม่ใช่ Admin' });
+    return res.status(401).json({ success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
   }
 });
+
 
 // --- API สำหรับผู้ใช้ทั่วไป ลงทะเบียน / เข้าสู่ระบบ / ใช้พ้อยท์ / อัปเกรด ---
 app.post('/proxy', async (req, res) => {
