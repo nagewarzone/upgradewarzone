@@ -6,7 +6,7 @@ const fetch = require('node-fetch'); // ใช้ส่งข้อความ 
 
 
 // โหลดไฟล์ Service Account ของ Firebase Admin SDK
-const serviceAccount = require('./firebase-adminsdk.json');
+const serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
 
 // เริ่มต้น Firebase Admin
 admin.initializeApp({
