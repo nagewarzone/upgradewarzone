@@ -5,6 +5,7 @@ const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON; // string 
 const serviceAccount = JSON.parse(serviceAccountJson);
 const path = require('path');
 const fetch = require('node-fetch'); // ใช้ส่งข้อความ Discord webhook
+console.log('SERVICE ACCOUNT JSON:', serviceAccountJson);
 
 
 // เริ่มต้น Firebase Admin
