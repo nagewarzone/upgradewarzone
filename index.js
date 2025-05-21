@@ -10,6 +10,9 @@ const fetch = require('node-fetch'); // ใช้ส่งข้อความ 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
+db.collection('users').limit(1).get()
+  .then(() => console.log('Firestore เชื่อมต่อได้!'))
+  .catch(err => console.error('Firestore connect error:', err));
 
 const db = admin.firestore();
 const app = express();
